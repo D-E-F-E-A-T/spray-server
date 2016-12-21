@@ -1,4 +1,4 @@
-package spray.examples
+package spray.server
 
 import scala.concurrent.duration._
 import akka.io.Tcp
@@ -7,7 +7,7 @@ import spray.http._
 import MediaTypes._
 import HttpMethods._
 
-class Handler extends Actor with ActorLogging {
+class Router extends Actor with ActorLogging {
 
   def receive = {
     case HttpRequest(GET, Uri.Path("/"), _, _, _) =>

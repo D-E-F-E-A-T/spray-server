@@ -1,4 +1,4 @@
-package spray.examples
+package spray.server
 
 import akka.actor.{Props, ActorSystem}
 import spray.servlet._
@@ -8,13 +8,13 @@ import spray.servlet._
 // `javax.servlet.ServletContext` parameter or a
 // default constructor.
 // It must mplement the spray.servlet.WebBoot trait.
-class Boot extends WebBoot {
+class Main extends WebBoot {
 
   // we need an ActorSystem to host our application in
   val system = ActorSystem("example")
 
   // the service actor replies to incoming HttpRequests
-  val serviceActor = system.actorOf(Props[Handler])
+  val serviceActor = system.actorOf(Props[Router])
 
   system.registerOnTermination {
     // put additional cleanup code here
