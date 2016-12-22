@@ -1,5 +1,6 @@
 package spray.server
 
+import scala.collection.mutable._
 import scala.concurrent.duration._
 import akka.io.Tcp
 import akka.actor._
@@ -50,7 +51,7 @@ class Router extends Actor with ActorLogging {
   ////////////// helpers //////////////
 
   lazy val index = HttpResponse(
-    entity = HttpEntity(`text/html`, """
+    entity = HttpEntity(`text/html`, toAscii("""
       <!doctype html>
       <html>
         <head>
@@ -68,5 +69,16 @@ class Router extends Actor with ActorLogging {
             <li><a href="timeout/timeout">timeout/timeout</a></li>
           </ul>
         </body>
-      </html>"""))
+      </html>""")))
+
+  def toAscii(text: String) = {
+    val sb = new StringBuffer
+    for (t <- text.toCharArray)
+      if (t.toInt > 19967 && t.toInt < 40870)
+        sb.append("&#").append(t.toInt).append(";")
+      else
+        sb.append(t)
+
+    sb.toString
+  }
 }
