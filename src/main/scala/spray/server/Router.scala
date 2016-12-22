@@ -9,22 +9,24 @@ import HttpMethods._
 
 class Router extends Actor with ActorLogging {
 
+  // 参考https://github.com/spray/spray
   def receive = {
 
-    case HttpRequest(GET, Uri.Path("/"), _, _, _) =>
+    case request @ HttpRequest(GET, Uri.Path("/"), _, _, _) =>
+      println(request.uri) // 暂未找到解析uri的方式
       sender ! index
 
     case HttpRequest(GET, Uri.Path("/ping"), _, _, _) =>
       sender ! HttpResponse(entity = "PONG!")
 
     case HttpRequest(GET, Uri.Path("/stream"), _, _, _) =>
-      val client = sender // since the Props creator is executed asyncly we need to save the sender ref
+      val client = sender // 长连接
       context.actorOf(Props(new Streamer(client, 20)))
 
     case HttpRequest(GET, Uri.Path("/crash"), _, _, _) =>
       sender ! HttpResponse(entity = "About to throw an exception in the request handling actor, " +
         "which triggers an actor restart")
-      sys.error("BOOM!")
+      sys.error("BOOM!") // 自定义异常
 
     case HttpRequest(GET, Uri.Path("/timeout"), _, _, _) =>
       log.info("Dropping request, triggering a timeout")
@@ -49,9 +51,14 @@ class Router extends Actor with ActorLogging {
 
   lazy val index = HttpResponse(
     entity = HttpEntity(`text/html`, """
+      <!doctype html>
       <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>中文标题</title>
+        </head>
         <body>
-          <h1>Say hello to <i>spray-servlet</i>!</h1>
+          <h1>Spray框架Demo</h1>
           <p>Defined resources:</p>
           <ul>
             <li><a href="ping">ping</a></li>
@@ -61,5 +68,5 @@ class Router extends Actor with ActorLogging {
             <li><a href="timeout/timeout">timeout/timeout</a></li>
           </ul>
         </body>
-      </html>""".toString))
+      </html>"""))
 }
