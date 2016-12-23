@@ -15,18 +15,22 @@ class Router extends Actor with ActorLogging {
 
     case request @ HttpRequest(GET, Uri.Path("/"), _, _, _) =>
       println(request.uri) // 暂未找到解析uri的方式
-      sender ! index
+      sender ! %(page = "index.html")
 
     case HttpRequest(GET, Uri.Path("/ping"), _, _, _) =>
-      sender ! HttpResponse(entity = "PONG!")
+      sender ! %("PONG!")
 
+    case request @ HttpRequest(POST, Uri.Path("/file-upload"), headers, entity: HttpEntity.NonEmpty, protocol) =>
+      val parts = request.asPartStream() //文件上传
+      val handler = context.actorOf(Props(new FileUpload(sender, parts.head.asInstanceOf[ChunkedRequestStart])))
+      parts.tail.foreach(handler !)
+      
     case HttpRequest(GET, Uri.Path("/stream"), _, _, _) =>
       val client = sender // 长连接
       context.actorOf(Props(new Streamer(client, 20)))
 
     case HttpRequest(GET, Uri.Path("/crash"), _, _, _) =>
-      sender ! HttpResponse(entity = "About to throw an exception in the request handling actor, " +
-        "which triggers an actor restart")
+      sender ! %(text = "About to throw an exception in the request handling actor, which triggers an actor restart")
       sys.error("BOOM!") // 自定义异常
 
     case HttpRequest(GET, Uri.Path("/timeout"), _, _, _) =>
@@ -39,46 +43,12 @@ class Router extends Actor with ActorLogging {
     case HttpRequest(GET, Uri.Path("/timeout/timeout"), _, _, _) =>
       log.info("Dropping request, triggering a timeout")
 
-    case _: HttpRequest => sender ! HttpResponse(404, "404 Unknown resource!")
+    case _: HttpRequest => sender ! HttpResponse(404, "404 资源未找到")
 
     case Timedout(HttpRequest(_, Uri.Path("/timeout/timeout"), _, _, _)) =>
       log.info("Dropping Timeout message")
 
     case Timedout(request: HttpRequest) =>
-      sender ! HttpResponse(500, "The " + request.method + " request to '" + request.uri + "' has timed out...")
-  }
-
-  ////////////// helpers //////////////
-
-  lazy val index = HttpResponse(
-    entity = HttpEntity(`text/html`, toAscii("""
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>中文标题</title>
-        </head>
-        <body>
-          <h1>Spray框架Demo</h1>
-          <p>Defined resources:</p>
-          <ul>
-            <li><a href="ping">ping</a></li>
-            <li><a href="stream">stream</a></li>
-            <li><a href="crash">crash</a></li>
-            <li><a href="timeout">timeout</a></li>
-            <li><a href="timeout/timeout">timeout/timeout</a></li>
-          </ul>
-        </body>
-      </html>""")))
-
-  def toAscii(text: String) = {
-    val sb = new StringBuffer
-    for (t <- text.toCharArray)
-      if (t.toInt > 19967 && t.toInt < 40870)
-        sb.append("&#").append(t.toInt).append(";")
-      else
-        sb.append(t)
-
-    sb.toString
+      sender ! HttpResponse(500, "500 服务器响应超时")
   }
 }
