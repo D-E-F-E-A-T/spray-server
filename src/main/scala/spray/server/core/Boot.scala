@@ -1,7 +1,8 @@
-package spray.server
+package spray.server.core
 
 import akka.actor.{ Props, ActorSystem }
 import spray.servlet._
+import spray.server.web.Router
 
 /**
  * 项目启动时加载，在application.conf中配置

@@ -1,21 +1,27 @@
-package spray.server
+package spray.server.web
 
 import scala.collection.mutable._
 import scala.concurrent.duration._
-import akka.io.Tcp
 import akka.actor._
 import spray.http._
-import MediaTypes._
-import HttpMethods._
+import spray.http.MediaTypes._
+import spray.http.HttpMethods._
+import spray.http.HttpEntity._
+import spray.http.StatusCode._
+import spray.server.core._
+import spray.server.page._
 
 class Router extends Actor with ActorLogging {
 
-  // 参考https://github.com/spray/spray
   def receive = {
 
-    case request @ HttpRequest(GET, Uri.Path("/"), _, _, _) =>
+    case request @ HttpRequest(GET, Uri.Path(""), _, _, _) =>
       println(request.uri) // 暂未找到解析uri的方式
-      sender ! %(page = "index.html")
+      sender ! %(page = index())
+
+    case request @ HttpRequest(GET, Uri.Path("/"), _, _, _) =>
+      println(request.uri) // 在Spray中""和"/"是两个完全不同的路径
+      sender ! %(page = index())
 
     case HttpRequest(GET, Uri.Path("/ping"), _, _, _) =>
       sender ! %("PONG!")
@@ -24,7 +30,7 @@ class Router extends Actor with ActorLogging {
       val parts = request.asPartStream() //文件上传
       val handler = context.actorOf(Props(new FileUpload(sender, parts.head.asInstanceOf[ChunkedRequestStart])))
       parts.tail.foreach(handler !)
-      
+
     case HttpRequest(GET, Uri.Path("/stream"), _, _, _) =>
       val client = sender // 长连接
       context.actorOf(Props(new Streamer(client, 20)))

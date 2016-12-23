@@ -1,4 +1,4 @@
-package spray.server
+package spray.server.core
 
 import scala.concurrent.duration._
 import akka.actor._
@@ -12,7 +12,7 @@ class Streamer(client: ActorRef, count: Int) extends Actor with ActorLogging {
   log.debug("Starting streaming response ...")
 
   // we use the successful sending of a chunk as trigger for scheduling the next chunk
-  client ! ChunkedResponseStart(HttpResponse(entity = " " * 2048)).withAck(Ok(count))
+  client ! ChunkedResponseStart(%(" " * 2048)).withAck(Ok(count))
 
   def receive = {
     case Ok(0) =>

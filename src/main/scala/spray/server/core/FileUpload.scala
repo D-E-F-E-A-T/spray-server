@@ -1,4 +1,4 @@
-package spray.server
+package spray.server.core
 
 import akka.actor._
 import scala.concurrent.duration._
@@ -38,14 +38,14 @@ class FileUpload(client: ActorRef, start: ChunkedRequestStart) extends Actor wit
       log.info(s"Got end of chunked request $method $uri")
       output.close
 
-      client ! HttpResponse(status = 200, entity = renderResult())
+      client ! HttpResponse(status = 200, entity = renderResult)
       client ! CommandWrapper(SetRequestTimeout(2.seconds)) // reset timeout to original value
-      tmpFile.delete()
+      tmpFile.delete
       context.stop(self)
   }
 
   import collection.JavaConverters._
-  def renderResult(): HttpEntity = {
+  def renderResult: HttpEntity = {
     val message = new MIMEMessage(new FileInputStream(tmpFile), boundary)
     // caution: the next line will read the complete file regardless of its size
     // In the end the mime pull parser is not a decent way of parsing multipart attachments
@@ -64,7 +64,7 @@ class FileUpload(client: ActorRef, start: ChunkedRequestStart) extends Actor wit
             {
               parts.map { part =>
                 val name = fileNameForPart(part).getOrElse("<unknown>")
-                <div>{ name }: { part.getContentType } of size { sizeOf(part.readOnce()) }</div>
+                <div>{ name }: { part.getContentType } of size { sizeOf(part.readOnce) }</div>
               }
             }
           </body>
