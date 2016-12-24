@@ -8,24 +8,33 @@ import spray.http.HttpEntity._
 import scala.xml._
 
 /**
+ * 输出文本
  * @author vermisse
  */
 object % {
+  def apply(text: String) = HttpResponse(entity = text)
+}
 
-  def apply(text: String = null, html: String = null, page: Elem = null) = {
-    if (text != null) {
-      HttpResponse(entity = text)
-    } else if (html != null) {
-      HttpResponse(entity = HttpEntity(`text/html`, ascii(html)))
-    } else if (page != null) {
-      HttpResponse(entity = HttpEntity(`text/html`, ascii("<!doctype html>\n" + page)))
-    } else { null }
-  }
+/**
+ * 输出HTML
+ */
+object & {
+  def apply(html: String) = HttpResponse(entity = HttpEntity(`text/html`, ascii(html)))
+  def apply(page: Elem) = HttpResponse(entity = HttpEntity(`text/html`, ascii("<!doctype html>\n" + page)))
+}
 
-  /**
-   * 中文转码
-   */
-  def ascii(text: String) = {
+/**
+ * 重定向
+ */
+object * {
+  def apply(uri: String) = HttpResponse(302, headers = List(HttpHeaders.Location(Uri(uri))))
+}
+
+/**
+ * 汉字转码
+ */
+object ascii {
+  def apply(text: String) = {
     val sb = new StringBuffer
     for (t <- text.toCharArray)
       if (t.toInt > 19967 && t.toInt < 40870)
