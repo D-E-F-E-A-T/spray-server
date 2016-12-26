@@ -10,7 +10,7 @@ import spray.http.HttpEntity._
 import spray.http.StatusCode._
 import spray.server.core._
 import spray.server.page._
-import java.util.UUID
+import java.util._
 
 class Router extends Actor with ActorLogging {
 

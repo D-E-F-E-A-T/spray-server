@@ -23,9 +23,10 @@ object fileUpload {
         <p>Got { bytesWritten } bytes</p>
         <h3>Parts</h3>
         {
-          parts.map { part =>
-            val name = fileNameForPart(part).getOrElse("<unknown>")
-            <div>{ name }: { part.getContentType } of size { sizeOf(part.readOnce) }</div>
+          parts.map {
+            part =>
+              val name = fileNameForPart(part).getOrElse("<unknown>")
+              <div>{ name }: { part.getContentType } of size { sizeOf(part.readOnce) }</div>
           }
         }
       </body>
